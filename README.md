@@ -14,10 +14,6 @@ Kulllanılan paketler/teknolojiler:
 - aws-sdk
 - dotenv
 
-Uygulamadan görüntüler
-
-
-
+## Uygulamadan görüntüler
 
 ![Support 1](https://github.com/aliblackeye/react-native-case/blob/master/support_1.png)
-![Support 2](https://github.com/aliblackeye/react-native-case/blob/master/support_2.png)
