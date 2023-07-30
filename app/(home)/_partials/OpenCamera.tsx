@@ -11,7 +11,6 @@ export default function OpenCamera() {
 	// Context
 	const { image } = useSupport() as any;
 
-	console.log("OpenCamera", image);
 
 	return (
 		<Pressable

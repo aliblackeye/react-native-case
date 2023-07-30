@@ -1,8 +1,4 @@
-import { useSupport } from "@/context/SupportContext";
-import { FontAwesome5 } from "@expo/vector-icons";
-import { Camera, CameraType, FlashMode } from "expo-camera";
-import { router } from "expo-router";
-import { useCallback, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import {
 	Button,
 	StyleSheet,
@@ -13,7 +9,29 @@ import {
 	Image,
 } from "react-native";
 
+// Context
+import { useSupport } from "@/context/SupportContext";
+
+// Expo
+import { FontAwesome5 } from "@expo/vector-icons";
+import { Camera, CameraType, FlashMode } from "expo-camera";
+import { router } from "expo-router";
+
+import S3 from "aws-sdk/clients/s3";
+
+// Env
+import { AWS_ACCESS, AWS_BUCKET_NAME, AWS_REGION, AWS_SECRET } from "@env";
+
 export default function Picture() {
+
+	const s3 = new S3({
+		region: AWS_REGION,
+		credentials: {
+			accessKeyId: AWS_ACCESS,
+			secretAccessKey: AWS_SECRET,
+		},
+	});
+
 	// Context
 	const { image, setImage } = useSupport() as any;
 
@@ -35,17 +53,40 @@ export default function Picture() {
 		}
 	};
 
-	const handleOk = (uri: string) => {
+	const handleOk = async (uri: string) => {
 		setImage(uri);
+
+		// Upload to S3
+		const params = {
+			Bucket: AWS_BUCKET_NAME,
+			Key: `${Date.now()}.jpg`,
+			Body: uri,
+			ContentType: "image/jpeg",
+			ACL: "public-read",
+		};
+
+		// Upload to S3
+		const res = s3
+			.upload(params, (err: any, data: any) => {
+				if (err) {
+					console.log(err);
+				} else {
+					console.log(data);
+				}
+			})
+			.promise();
+
+		console.log(res);
+
 		setPicture(null);
 		router.replace("/");
 	};
 
-	function toggleCameraType() {
+	const toggleCameraType = () => {
 		setType((current) =>
 			current === CameraType.back ? CameraType.front : CameraType.back
 		);
-	}
+	};
 
 	if (!permission) {
 		// Camera permissions are still loading

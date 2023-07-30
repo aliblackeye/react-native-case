@@ -2,7 +2,7 @@
 import { useEffect, useState, useCallback } from "react";
 
 // React Native
-import { View, StyleSheet } from "react-native";
+import { View, StyleSheet, Pressable, Text } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 // Context
@@ -31,7 +31,6 @@ export default function HomeScreen() {
 
 	// States
 	const [location, setLocation] = useState<any>(null);
-	const [yourLocation, setYourLocation] = useState<string>("");
 	const [reverseGeocodeLocation, setReverseGeocodeLocation] =
 		useState<any>(null);
 	const [comment, setComment] = useState<string>("");
@@ -59,8 +58,12 @@ export default function HomeScreen() {
 		});
 		setReverseGeocodeLocation(reversedLocation);
 
-		setYourLocation(
-			(reversedLocation?.[0]?.city ? reversedLocation?.[0]?.city + ", " : "") +
+		setUserLocation({
+			...userLocation,
+			detail:
+				(reversedLocation?.[0]?.city
+					? reversedLocation?.[0]?.city + ", "
+					: "") +
 				(reversedLocation?.[0]?.district
 					? reversedLocation?.[0]?.district + ", "
 					: "") +
@@ -70,12 +73,12 @@ export default function HomeScreen() {
 				(reversedLocation?.[0]?.name ? reversedLocation?.[0]?.name : "") +
 				(reversedLocation?.[0]?.country
 					? ", " + reversedLocation?.[0]?.country
-					: "")
-		);
+					: ""),
+		});
 	};
 
 	const validateFields = () => {
-		if (yourLocation === "") return alert("Please enter your location");
+		if (userLocation.detail === "") return alert("Please enter your location");
 
 		if (qrCode === "") return alert("Please scan a QR Code");
 
@@ -93,25 +96,34 @@ export default function HomeScreen() {
 		if (!validateFields()) return;
 
 		try {
-			const { data } = await axios.post(
-				"https://api.hergele.co/testreport",
-				{
-					phone: "5555555555",
-					qrCode,
-					userLocation,
-					photo: image,
-					type,
-				},
-				{
-					headers: {
+			console.log("Sending...");
+
+			const data = await axios
+				.post(
+					"https://api.hergele.co/testreport",
+					{
 						phone: "5555555555",
-						authCode: "testCode",
+						qrCode,
+						userLocation,
+						photo: image,
+						type,
+						message: comment,
 					},
-				}
-			);
-			console.log(data);
+					{
+						headers: {
+							phone: "5555555555",
+							authCode: "testCode",
+						},
+					}
+				)
+				.catch((error) => {
+					alert(`Error: ${error}`);
+				});
+
+			console.log("Data:", data);
 		} catch (error) {
 			console.log("Error:", error);
+			alert(`Error: ${error}`);
 		}
 	};
 
@@ -147,8 +159,8 @@ export default function HomeScreen() {
 				<View style={styles.body}>
 					{/* LOCATION INPUT */}
 					<LocationInput
-						yourLocation={yourLocation}
-						setYourLocation={setYourLocation}
+						userLocation={userLocation}
+						setUserLocation={setUserLocation}
 					/>
 
 					{/* SCAN QR CODE */}
@@ -184,11 +196,21 @@ export default function HomeScreen() {
 				</View>
 
 				<View style={styles.footer}>
-					<Button
+					<Pressable
 						onPress={handleSend}
-						text="Send"
-						textAlign="center"
-					/>
+						style={({ pressed }) => [
+							pressed && {
+								opacity: pressed ? 0.8 : 1,
+							},
+							styles.sendButton,
+						]}>
+						<Text
+							style={{
+								color: "#fff",
+							}}>
+							Send
+						</Text>
+					</Pressable>
 				</View>
 			</View>
 		</SafeAreaView>
@@ -214,5 +236,17 @@ const styles = StyleSheet.create({
 
 	footer: {
 		marginBottom: 20,
+	},
+	sendButton: {
+		backgroundColor: "#b3175e",
+		alignItems: "center",
+		justifyContent: "center",
+		height: 50,
+		borderRadius: 10,
+	},
+	sendButtonOnPress: {
+		backgroundColor: "#4bc914",
+		borderColor: "#000",
+		borderWidth: 1,
 	},
 });

@@ -5,15 +5,15 @@ export type UserLocation = {
 	lat: number;
 	lon: number;
 	detail: string;
-}
+};
 
 interface LocationInputProps {
-	yourLocation: string;
-	setYourLocation: React.Dispatch<React.SetStateAction<string>>;
+	userLocation: UserLocation;
+	setUserLocation: React.Dispatch<React.SetStateAction<UserLocation>>;
 }
 
 export default function LocationInput(props: LocationInputProps) {
-	const { yourLocation, setYourLocation } = props;
+	const { userLocation, setUserLocation } = props;
 	return (
 		<View style={styles.locationInput}>
 			<TextInput
@@ -22,8 +22,13 @@ export default function LocationInput(props: LocationInputProps) {
 				style={{
 					marginRight: 20,
 				}}
-				value={yourLocation}
-				onChangeText={setYourLocation}
+				value={userLocation.detail}
+				onChangeText={(detail) => {
+					setUserLocation({
+						...userLocation,
+						detail,
+					});
+				}}
 			/>
 			<FontAwesome
 				name="map-marker"
