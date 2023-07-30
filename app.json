@@ -1,40 +1,64 @@
 {
-  "expo": {
-    "name": "react-native-case",
-    "slug": "react-native-case",
-    "version": "1.0.0",
-    "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
-    "scheme": "myapp",
-    "userInterfaceStyle": "automatic",
-    "splash": {
-      "image": "./assets/images/splash.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
-    },
-    "assetBundlePatterns": [
-      "**/*"
-    ],
-    "ios": {
-      "supportsTablet": true
-    },
-    "android": {
-      "adaptiveIcon": {
-        "foregroundImage": "./assets/images/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
-      }
-    },
-    "web": {
-      "bundler": "metro",
-      "output": "static",
-      "favicon": "./assets/images/favicon.png"
-    },
-    "plugins": [
-      "expo-router"
-    ],
-    "experiments": {
-      "tsconfigPaths": true,
-      "typedRoutes": true
-    }
-  }
+	"expo": {
+		"name": "react-native-case",
+		"slug": "react-native-case",
+		"version": "1.0.0",
+		"orientation": "portrait",
+		"icon": "./assets/images/icon.png",
+		"scheme": "myapp",
+		"userInterfaceStyle": "automatic",
+		"splash": {
+			"image": "./assets/images/splash.png",
+			"resizeMode": "contain",
+			"backgroundColor": "#ffffff"
+		},
+		"assetBundlePatterns": ["**/*"],
+		"ios": {
+			"supportsTablet": true,
+			"config": {
+				"googleMapsApiKey": "AIzaSyCAQkuYZBYM3zFkpQmc-OAReOjrC-E1X_c"
+			}
+		},
+		"android": {
+			"adaptiveIcon": {
+				"foregroundImage": "./assets/images/adaptive-icon.png",
+				"backgroundColor": "#ffffff"
+			},
+			"config": {
+				"googleMaps": {
+					"apiKey": "AIzaSyCAQkuYZBYM3zFkpQmc-OAReOjrC-E1X_c"
+				}
+			}
+		},
+		"web": {
+			"bundler": "metro",
+			"output": "static",
+			"favicon": "./assets/images/favicon.png"
+		},
+		"plugins": [
+			"expo-router",
+			[
+				"expo-location",
+				{
+					"locationAlwaysAndWhenInUsePermission": "Allow Hergele to use your location."
+				}
+			],
+			[
+				"expo-barcode-scanner",
+				{
+					"cameraPermission": "Allow Hergele to access camera."
+				}
+			],
+			[
+				"expo-camera",
+				{
+					"cameraPermission": "Allow Hergele to access your camera."
+				}
+			]
+		],
+		"experiments": {
+			"tsconfigPaths": true,
+			"typedRoutes": true
+		}
+	}
 }
