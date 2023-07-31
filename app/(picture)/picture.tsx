@@ -17,23 +17,13 @@ import { FontAwesome5 } from "@expo/vector-icons";
 import { Camera, CameraType, FlashMode } from "expo-camera";
 import { router } from "expo-router";
 
-import S3 from "aws-sdk/clients/s3";
-
 // Env
 import { AWS_ACCESS, AWS_BUCKET_NAME, AWS_REGION, AWS_SECRET } from "@env";
+import { BarCodeScanner } from "expo-barcode-scanner";
 
 export default function Picture() {
-
-	const s3 = new S3({
-		region: AWS_REGION,
-		credentials: {
-			accessKeyId: AWS_ACCESS,
-			secretAccessKey: AWS_SECRET,
-		},
-	});
-
 	// Context
-	const { image, setImage } = useSupport() as any;
+	const { image, setImage, setImageUrl } = useSupport() as any;
 
 	// Variables
 	const camera = useRef<Camera>(null);
@@ -41,6 +31,7 @@ export default function Picture() {
 	const [type, setType] = useState(CameraType.back);
 	const [permission, requestPermission] = Camera.useCameraPermissions();
 	const [picture, setPicture] = useState<any>(null);
+	const [flash, setFlash] = useState<boolean>(false);
 
 	const takePicture = async () => {
 		try {
@@ -56,30 +47,8 @@ export default function Picture() {
 	const handleOk = async (uri: string) => {
 		setImage(uri);
 
-		// Upload to S3
-		const params = {
-			Bucket: AWS_BUCKET_NAME,
-			Key: `${Date.now()}.jpg`,
-			Body: uri,
-			ContentType: "image/jpeg",
-			ACL: "public-read",
-		};
-
-		// Upload to S3
-		const res = s3
-			.upload(params, (err: any, data: any) => {
-				if (err) {
-					console.log(err);
-				} else {
-					console.log(data);
-				}
-			})
-			.promise();
-
-		console.log(res);
-
-		setPicture(null);
 		router.replace("/");
+		setPicture(null);
 	};
 
 	const toggleCameraType = () => {
@@ -116,7 +85,7 @@ export default function Picture() {
 					style={styles.camera}
 					type={type}
 					focusable
-					flashMode={FlashMode.off}></Camera>
+					flashMode={flash ? FlashMode.torch : FlashMode.off}></Camera>
 			) : (
 				<Image
 					source={{ uri: picture }}
@@ -136,6 +105,18 @@ export default function Picture() {
 						<Pressable onPress={takePicture}>
 							<FontAwesome5
 								name="camera"
+								size={20}
+								color="#fff"
+							/>
+						</Pressable>
+
+						<Pressable
+							onPress={() => {
+								setFlash(!flash);
+							}}
+							>
+							<FontAwesome5
+								name={"lightbulb"}
 								size={20}
 								color="#fff"
 							/>
@@ -183,5 +164,11 @@ const styles = StyleSheet.create({
 		justifyContent: "space-between",
 		padding: 30,
 		paddingHorizontal: 50,
+	},
+	flashButton: {
+		flexDirection: "row",
+		alignItems: "center",
+		justifyContent: "center",
+		marginBottom: 20,
 	},
 });

@@ -10,7 +10,6 @@ export default function Comment(props: CommentProps) {
 	return (
 		<TextInput
 			style={{
-				marginBottom: 10,
 				paddingHorizontal: 24,
 				borderRadius: 8,
 				backgroundColor: "#b3145d",

@@ -11,6 +11,9 @@ import { useSupport } from "@/context/SupportContext";
 // Axios
 import axios from "axios";
 
+// S3
+import S3 from "aws-sdk/clients/s3";
+
 // Expo
 import { FontAwesome } from "@expo/vector-icons";
 import * as Location from "expo-location";
@@ -26,14 +29,24 @@ import SelectReportType, { ReportType } from "./_partials/SelectReportType";
 import Button from "@/components/Button";
 
 export default function HomeScreen() {
+	const s3 = new S3({
+		region: "eu-central-1",
+		credentials: {
+			accessKeyId: "AKIAYUTWBLYX52BYHPUL",
+			secretAccessKey: "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",
+		},
+	});
+
 	// Context
-	const { qrCode, image } = useSupport() as any;
+	const { qrCode, image, imageUrl, setImageUrl } = useSupport() as any;
 
 	// States
 	const [location, setLocation] = useState<any>(null);
 	const [reverseGeocodeLocation, setReverseGeocodeLocation] =
 		useState<any>(null);
 	const [comment, setComment] = useState<string>("");
+	const [success, setSuccess] = useState<boolean>(false);
+	const [loading, setLoading] = useState<boolean>(false);
 
 	/* Report Type */
 	const [type, setType] = useState<ReportType>({
@@ -92,20 +105,62 @@ export default function HomeScreen() {
 		return true;
 	};
 
+	function uriToBlob(uri: string): Promise<Blob> {
+		return new Promise((resolve, reject) => {
+			const xhr = new XMLHttpRequest();
+
+			// If successful -> return with blob
+			xhr.onload = function () {
+				resolve(xhr.response);
+			};
+
+			// reject on error
+			xhr.onerror = function () {
+				reject(new Error("uriToBlob failed"));
+			};
+
+			// Set the response type to 'blob' - this means the server's response
+			// will be accessed as a binary object
+			xhr.responseType = "blob";
+
+			// Initialize the request. The third argument set to 'true' denotes
+			// that the request is asynchronous
+			xhr.open("GET", uri, true);
+
+			// Send the request. The 'null' argument means that no body content is given for the request
+			xhr.send(null);
+		});
+	}
+
 	const handleSend = async () => {
 		if (!validateFields()) return;
 
+		setLoading(true);
 		try {
-			console.log("Sending...");
+			// Convert URI to Blob
+			const blob = await uriToBlob(image);
 
-			const data = await axios
+			// Set image
+			const key = `${Date.now()}.jpg`;
+			// Upload to AWS S3
+			const params = {
+				Bucket: "deneme1awsbucket",
+				Key: key,
+				Body: blob,
+				ContentType: "image/jpeg",
+			};
+
+			// Upload to S3
+			const res = await s3.upload(params).promise();
+
+			await axios
 				.post(
 					"https://api.hergele.co/testreport",
 					{
 						phone: "5555555555",
 						qrCode,
 						userLocation,
-						photo: image,
+						photo: res.Location,
 						type,
 						message: comment,
 					},
@@ -116,14 +171,19 @@ export default function HomeScreen() {
 						},
 					}
 				)
+				.then((res) => {
+					setSuccess(true);
+					setLoading(false);
+				})
 				.catch((error) => {
 					alert(`Error: ${error}`);
+					setLoading(false);
+					setSuccess(true);
 				});
-
-			console.log("Data:", data);
 		} catch (error) {
 			console.log("Error:", error);
-			alert(`Error: ${error}`);
+			setLoading(false);
+			setSuccess(false);
 		}
 	};
 
@@ -198,18 +258,31 @@ export default function HomeScreen() {
 				<View style={styles.footer}>
 					<Pressable
 						onPress={handleSend}
+						disabled={loading || success ? true : false}
 						style={({ pressed }) => [
-							pressed && {
-								opacity: pressed ? 0.8 : 1,
+							{
+								...styles.sendButton,
+								...{
+									backgroundColor: success ? "#5cb85c" : "#b3175e",
+								},
 							},
-							styles.sendButton,
+							pressed && { opacity: 0.5 },
+							loading && { opacity: 0.5 },
 						]}>
-						<Text
-							style={{
-								color: "#fff",
-							}}>
-							Send
-						</Text>
+						{success ? (
+							<FontAwesome
+								name="check"
+								size={20}
+								color="#fff"
+							/>
+						) : (
+							<Text
+								style={{
+									color: "#fff",
+								}}>
+								Send
+							</Text>
+						)}
 					</Pressable>
 				</View>
 			</View>
