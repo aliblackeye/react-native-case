@@ -37,6 +37,11 @@ export default function HomeScreen() {
 		},
 	});
 
+	// API bilgileri
+	const apiUrl = "https://api.hergele.co/testreport";
+	const phoneNumber = "5555555555";
+	const authCode = "testCode";
+
 	// Context
 	const { qrCode, image, imageUrl, setImageUrl } = useSupport() as any;
 
@@ -153,32 +158,32 @@ export default function HomeScreen() {
 			// Upload to S3
 			const res = await s3.upload(params).promise();
 
-			await axios
-				.post(
-					"https://api.hergele.co/testreport",
-					{
-						phone: "5555555555",
-						qrCode,
-						userLocation,
-						photo: res.Location,
-						type,
-						message: comment,
+			const formData = {
+				phone: "5555555555",
+				qrCode,
+				userLocation,
+				photo: res.Location,
+				type,
+				message: comment,
+			};
+
+			axios
+				.post(apiUrl, formData, {
+					headers: {
+						phoneNumber: phoneNumber,
+						authCode: authCode,
 					},
-					{
-						headers: {
-							phone: "5555555555",
-							authCode: "testCode",
-						},
-					}
-				)
+				})
 				.then((res) => {
 					setSuccess(true);
 					setLoading(false);
+					console.log("Başarıyla gönderildi.");
+					console.log(res.data);
 				})
 				.catch((error) => {
 					alert(`Error: ${error}`);
 					setLoading(false);
-					setSuccess(true);
+					setSuccess(false);
 				});
 		} catch (error) {
 			console.log("Error:", error);
